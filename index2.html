@@ -1,0 +1,67 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen de Guía de Estudio Policial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-blue-50 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl transform transition-all">
+        <h1 class="text-3xl font-bold mb-6 text-center text-blue-800">Examen de Guía de Estudio Policial</h1>
+        <p class="text-center text-gray-700 mb-6">Seleccione una opción para comenzar:</p>
+        <div class="space-y-4">
+            <a href="index_part1.html" class="block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 text-center font-semibold transition-transform hover:scale-105">Parte 1 (Preguntas 1-50)</a>
+            <a href="index_part2.html" class="block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 text-center font-semibold transition-transform hover:scale-105">Parte 2 (Preguntas 51-100)</a>
+            <a href="index_part3.html" class="block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 text-center font-semibold transition-transform hover:scale-105">Parte 3 (Preguntas 101-150)</a>
+            <a href="index_part4.html" class="block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 text-center font-semibold transition-transform hover:scale-105">Parte 4 (Preguntas 151-200)</a>
+            <a href="index_part1.html" class="block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 text-center font-semibold transition-transform hover:scale-105">Examen completo (200 preguntas)</a>
+        </div>
+    </div>
+</body>
+</html>

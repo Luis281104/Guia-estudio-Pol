@@ -1,0 +1,120 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Principal - Examen Policial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-blue-50 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-4xl">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-blue-800">Menú Principal</h1>
+            <button id="logout-button" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-semibold transition-transform hover:scale-105">Cerrar Sesión</button>
+        </div>
+        <p id="welcome-message" class="text-lg text-gray-700 mb-6"></p>
+        <div id="error-message" class="hidden bg-red-100 text-red-800 p-4 rounded-lg mb-4"></div>
+
+        <!-- Sección: Examen Actual -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Examen Actual</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href="index_part1.html" class="bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 text-center font-semibold transition-transform hover:scale-105">Parte 1: Preguntas 1-50</a>
+                <a href="index_part2.html" class="bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 text-center font-semibold transition-transform hover:scale-105">Parte 2: Preguntas 51-100</a>
+                <a href="index_part3.html" class="bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 text-center font-semibold transition-transform hover:scale-105">Parte 3: Preguntas 101-150</a>
+                <a href="index_part4.html" class="bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 text-center font-semibold transition-transform hover:scale-105">Parte 4: Preguntas 151-200</a>
+            </div>
+        </div>
+
+        <!-- Sección: Otras Evaluaciones -->
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Otras Evaluaciones (Próximamente)</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Principios Fundamentales y Derechos Humanos</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Protocolos de Primera Intervención y Atención a Víctimas</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Interacción con Poblaciones Específicas</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Procedimientos de Detención e Inspección</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Estructura y Funcionamiento Institucional</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Carrera Policial y Profesionalización</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Recopilación y Análisis de Información</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Planeación Estratégica y Operativa</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Modelos de Actuación Policial</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Evaluación y Rendición de Cuentas</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Análisis Delictual</button>
+                <button disabled class="bg-gray-400 text-gray-700 px-6 py-4 rounded-lg text-center font-semibold cursor-not-allowed" title="Disponible próximamente">Otros</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const logoutButton = document.getElementById('logout-button');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const errorMessage = document.getElementById('error-message');
+
+        // Verificar sesión al cargar la página
+        window.onload = () => {
+            const session = JSON.parse(localStorage.getItem('session') || '{}');
+            if (!session.loggedIn || !session.email) {
+                errorMessage.textContent = 'Por favor, inicia sesión para acceder al menú.';
+                errorMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+            welcomeMessage.textContent = `Bienvenido, ${session.email}`;
+        };
+
+        // Manejar logout
+        logoutButton.onclick = () => {
+            localStorage.removeItem('session');
+            window.location.href = 'login.html';
+        };
+    </script>
+</body>
+</html>

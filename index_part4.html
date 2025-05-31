@@ -1,0 +1,844 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen de Guía de Estudio Policial - Parte 4</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-blue-50 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl transform transition-all">
+        <div id="start-screen" class="mb-6 text-center">
+            <h2 class="text-2xl font-semibold mb-4">Bienvenido a la Parte 4</h2>
+            <p class="mb-4">¿Desea realizar solo esta parte (50 preguntas) o finalizar el examen?</p>
+            <button id="single-part" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 mr-2">Solo esta parte</button>
+            <button id="full-exam" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">Finalizar examen</button>
+        </div>
+        <div id="exam-content" class="hidden">
+            <h1 class="text-3xl font-bold mb-6 text-center text-blue-800">Examen de Guía de Estudio Policial - Parte 4</h1>
+            <div id="statistics" class="mb-6 text-center">
+                <p class="text-gray-700">Preguntas respondidas: <span id="answered" class="font-semibold">0</span>/50</p>
+                <p class="text-gray-700">Correctas: <span id="correct" class="font-semibold text-green-600">0</span></p>
+                <p class="text-gray-700">Incorrectas: <span id="incorrect" class="font-semibold text-red-600">0</span></p>
+                <p class="text-gray-700">Progreso: <span id="percentage" class="font-semibold">0%</span></p>
+                <progress id="progress-bar" value="0" max="50" class="w-full h-2 mt-2 bg-gray-200 rounded-full"></progress>
+            </div>
+            <div id="question-container" class="mb-6 transition-opacity duration-300">
+                <h2 id="question-text" class="text-xl font-semibold mb-4 text-gray-800"></h2>
+                <div id="options" class="space-y-3"></div>
+            </div>
+            <div id="feedback" class="hidden p-4 rounded-lg mb-6 text-gray-800"></div>
+            <button id="next-button" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 w-full font-semibold transition-transform hover:scale-105 disabled:bg-gray-400">Siguiente</button>
+            <button id="restart-button" class="hidden bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 w-full font-semibold mt-4 transition-transform hover:scale-105">Reiniciar</button>
+            <div id="end-screen" class="hidden text-center mt-4">
+                <h2 class="text-xl font-bold mb-4">¡Examen completado!</h2>
+                <p class="mb-4">Ha completado todas las preguntas. ¿Qué desea hacer?</p>
+                <a href="index.html" class="text-blue-600 hover:underline">Volver al menú principal</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                id: 151,
+                question: "¿Qué protege el Artículo 24 de la Constitución Mexicana?",
+                options: [
+                    "Libertad de culto",
+                    "Derecho a la educación",
+                    "Propiedad privada",
+                    "Libertad de prensa"
+                ],
+                correctAnswer: "a",
+                feedback: "El Artículo 24 protege la libertad de culto."
+            },
+            {
+                id: 152,
+                question: "¿Qué establece el Artículo 27 sobre la propiedad de la tierra?",
+                options: [
+                    "Solo privados pueden poseerla",
+                    "La nación tiene dominio originario",
+                    "No hay regulación",
+                    "Solo extranjeros pueden adquirirla"
+                ],
+                correctAnswer: "b",
+                feedback: "La nación tiene dominio originario."
+            },
+            {
+                id: 153,
+                question: "¿Qué derecho garantiza el Artículo 123?",
+                options: [
+                    "Derecho al trabajo digno",
+                    "Libertad de expresión",
+                    "Derecho a la salud",
+                    "Educación gratuita"
+                ],
+                correctAnswer: "a",
+                feedback: "Garantiza trabajo digno."
+            },
+            {
+                id: 154,
+                question: "¿Qué prohíbe el Artículo 13?",
+                options: [
+                    "Tribunales especiales",
+                    "Educación pública",
+                    "Libertad de culto",
+                    "Propiedad privada"
+                ],
+                correctAnswer: "a",
+                feedback: "Prohíbe tribunales especiales."
+            },
+            {
+                id: 155,
+                question: "¿Qué establece el Artículo 20 sobre la detención arbitraria?",
+                options: [
+                    "Está permitida",
+                    "Está prohibida",
+                    "Depende del caso",
+                    "Solo en emergencias"
+                ],
+                correctAnswer: "b",
+                feedback: "Prohíbe la detención arbitraria."
+            },
+            {
+                id: 156,
+                question: "¿Qué principio rige la actuación policial según el Artículo 21?",
+                options: [
+                    "Legalidad",
+                    "Agresión",
+                    "Secreto",
+                    "Exclusión"
+                ],
+                correctAnswer: "a",
+                feedback: "La legalidad guía la actuación policial."
+            },
+            {
+                id: 157,
+                question: "¿Qué deben hacer los policías tras una detención según el Artículo 16?",
+                options: [
+                    "Liberar al detenido",
+                    "Informar al Ministerio Público",
+                    "Ignorar el caso",
+                    "Publicar detalles"
+                ],
+                correctAnswer: "b",
+                feedback: "Deben informar al Ministerio Público."
+            },
+            {
+                id: 158,
+                question: "¿Qué regula el Artículo 125 de la Ley General?",
+                options: [
+                    "Armas policiales",
+                    "Salarios",
+                    "Protestas",
+                    "Educación"
+                ],
+                correctAnswer: "a",
+                feedback: "Regula armas policiales."
+            },
+            {
+                id: 159,
+                question: "¿Qué sucede si un policía usa fuerza excesiva según la Ley Nacional?",
+                options: [
+                    "No hay consecuencias",
+                    "Puede ser sancionado",
+                    "Recibe un ascenso",
+                    "Es obligatorio"
+                ],
+                correctAnswer: "b",
+                feedback: "Puede ser sancionado."
+            },
+            {
+                id: 160,
+                question: "¿Qué nivel de fuerza es la restricción física?",
+                options: [
+                    "Primero",
+                    "Segundo",
+                    "Tercero",
+                    "Cuarto"
+                ],
+                correctAnswer: "c",
+                feedback: "Es el tercer nivel."
+            },
+            {
+                id: 161,
+                question: "¿Qué prohíbe el Artículo 27 en manifestaciones pacíficas?",
+                options: [
+                    "Presencia policial",
+                    "Uso de armas",
+                    "Diálogo",
+                    "Tráfico"
+                ],
+                correctAnswer: "b",
+                feedback: "Prohíbe el uso de armas."
+            },
+            {
+                id: 162,
+                question: "¿Qué debe reportarse tras usar la fuerza según el Artículo 32?",
+                options: [
+                    "Solo nombres",
+                    "Detalles del incidente",
+                    "Costos",
+                    "Opiniones"
+                ],
+                correctAnswer: "b",
+                feedback: "Deben reportarse detalles."
+            },
+            {
+                id: 163,
+                question: "¿Qué busca el Registro Nacional de Detenciones?",
+                options: [
+                    "Aumentar detenciones",
+                    "Proteger derechos humanos",
+                    "Publicidad",
+                    "Reducir personal"
+                ],
+                correctAnswer: "b",
+                feedback: "Protege derechos humanos."
+            },
+            {
+                id: 164,
+                question: "¿Qué principio asegura la eficacia del Registro de Detenciones?",
+                options: [
+                    "Secreto",
+                    "Transparencia",
+                    "Exclusión",
+                    "Agresión"
+                ],
+                correctAnswer: "b",
+                feedback: "La transparencia es clave."
+            },
+            {
+                id: 165,
+                question: "¿Qué promueve la Ley General para la Igualdad?",
+                options: [
+                    "Servicio militar",
+                    "Igualdad de género",
+                    "Impuestos",
+                    "Protestas"
+                ],
+                correctAnswer: "b",
+                feedback: "Promueve igualdad de género."
+            },
+            {
+                id: 166,
+                question: "¿Qué es la violencia psicológica?",
+                options: [
+                    "Daño físico",
+                    "Insultos y amenazas",
+                    "Control económico",
+                    "Destrucción de bienes"
+                ],
+                correctAnswer: "b",
+                feedback: "Incluye insultos y amenazas."
+            },
+            {
+                id: 167,
+                question: "¿Qué es la violencia económica?",
+                options: [
+                    "Control de recursos financieros",
+                    "Daño físico",
+                    "Abuso verbal",
+                    "Humillación"
+                ],
+                correctAnswer: "a",
+                feedback: "Implica control financiero."
+            },
+            {
+                id: 168,
+                question: "¿Qué deben hacer los policías ante violencia sexual reciente?",
+                options: [
+                    "Ignorar la queja",
+                    "Informar sobre servicios médicos",
+                    "Detener a la víctima",
+                    "Publicar el caso"
+                ],
+                correctAnswer: "b",
+                feedback: "Informar sobre servicios médicos."
+            },
+            {
+                id: 169,
+                question: "¿Qué principio guía las órdenes de protección?",
+                options: [
+                    "Retraso",
+                    "Oportunidad",
+                    "Exclusión",
+                    "Publicidad"
+                ],
+                correctAnswer: "b",
+                feedback: "Garantiza oportunidad."
+            },
+            {
+                id: 170,
+                question: "¿Qué busca la Ley de la Ciudad de México sobre violencia?",
+                options: [
+                    "Turismo",
+                    "Prevenir violencia",
+                    "Impuestos",
+                    "Protestas"
+                ],
+                correctAnswer: "b",
+                feedback: "Previene violencia."
+            },
+            {
+                id: 171,
+                question: "¿Qué es la igualdad sustantiva?",
+                options: [
+                    "Trato equitativo",
+                    "Preferencia a hombres",
+                    "Derechos limitados",
+                    "Reclutamiento militar"
+                ],
+                correctAnswer: "a",
+                feedback: "Implica trato equitativo."
+            },
+            {
+                id: 172,
+                question: "¿Qué fase del ciclo de violencia implica reconciliación?",
+                options: [
+                    "Tensión",
+                    "Agresión",
+                    "Luna de miel",
+                    "Juicio"
+                ],
+                correctAnswer: "c",
+                feedback: "Es la fase de reconciliación."
+            },
+            {
+                id: 173,
+                question: "¿Quién es víctima indirecta en casos de violencia?",
+                options: [
+                    "Policía",
+                    "Familiar afectado",
+                    "Medios",
+                    "Juez"
+                ],
+                correctAnswer: "b",
+                feedback: "Es un familiar afectado."
+            },
+            {
+                id: 174,
+                question: "¿Qué principio evita tratar a víctimas como delincuentes?",
+                options: [
+                    "Criminalización",
+                    "No criminalización",
+                    "Publicidad",
+                    "Exclusión"
+                ],
+                correctAnswer: "b",
+                feedback: "Evita criminalizar víctimas."
+            },
+            {
+                id: 175,
+                question: "¿Qué deben evitar los policías en casos de violencia?",
+                options: [
+                    "Estereotipos",
+                    "Evaluaciones",
+                    "Informes",
+                    "Diálogo"
+                ],
+                correctAnswer: "a",
+                feedback: "Deben evitar estereotipos."
+            },
+            {
+                id: 176,
+                question: "¿Qué prohíbe el Artículo 1 de la Constitución?",
+                options: [
+                    "Educación",
+                    "Discriminación",
+                    "Expresión",
+                    "Protestas"
+                ],
+                correctAnswer: "b",
+                feedback: "Prohíbe la discriminación."
+            },
+            {
+                id: 177,
+                question: "¿Qué asegura el Artículo 16 para detenciones?",
+                options: [
+                    "Orden escrita",
+                    "Detención arbitraria",
+                    "Sin justificación",
+                    "Publicidad"
+                ],
+                correctAnswer: "a",
+                feedback: "Requiere orden escrita."
+            },
+            {
+                id: 178,
+                question: "¿Qué derecho tiene el acusado según el Artículo 20?",
+                options: [
+                    "Evitar juicios",
+                    "Asesoría legal",
+                    "Detención indefinida",
+                    "Publicidad"
+                ],
+                correctAnswer: "b",
+                feedback: "Derecho a asesoría legal."
+            },
+            {
+                id: 179,
+                question: "¿Qué establece el Artículo 21 sobre investigaciones?",
+                options: [
+                    "Solo policía investiga",
+                    "Ministerio Público dirige",
+                    "Sin regulación",
+                    "Civiles investigan"
+                ],
+                correctAnswer: "b",
+                feedback: "El Ministerio Público dirige."
+            },
+            {
+                id: 180,
+                question: "¿Qué promueve el Artículo 47 de la Ley General?",
+                options: [
+                    "Tácticas militares",
+                    "Formación policial",
+                    "Seguridad privada",
+                    "Protestas"
+                ],
+                correctAnswer: "b",
+                feedback: "Promueve formación policial."
+            },
+            {
+                id: 181,
+                question: "¿Qué es la violencia institucional?",
+                options: [
+                    "Agresión física",
+                    "Obstrucción de derechos",
+                    "Protestas",
+                    "Medios"
+                ],
+                correctAnswer: "b",
+                feedback: "Obstruye derechos."
+            },
+            {
+                id: 182,
+                question: "¿Qué asegura la accesibilidad en órdenes de protección?",
+                options: [
+                    "Barreras",
+                    "Acceso fácil",
+                    "Retrasos",
+                    "Publicidad"
+                ],
+                correctAnswer: "b",
+                feedback: "Garantiza acceso fácil."
+            },
+            {
+                id: 183,
+                question: "¿Qué busca el sistema de alerta de violencia?",
+                options: [
+                    "Impuestos",
+                    "Seguridad de mujeres",
+                    "Turismo",
+                    "Educación"
+                ],
+                correctAnswer: "b",
+                feedback: "Protege a las mujeres."
+            },
+            {
+                id: 184,
+                question: "¿Qué exige la Ley de la Ciudad de México sobre violencia?",
+                options: [
+                    "Control militar",
+                    "Debida diligencia",
+                    "Protestas",
+                    "Impuestos"
+                ],
+                correctAnswer: "b",
+                feedback: "Exige debida diligencia."
+            },
+            {
+                id: 185,
+                question: "¿Qué es la fase de tensión en el ciclo de violencia?",
+                options: [
+                    "Reconciliación",
+                    "Escalada de conflicto",
+                    "Juicio",
+                    "Agresión"
+                ],
+                correctAnswer: "b",
+                feedback: "Es la escalada de conflicto."
+            },
+            {
+                id: 186,
+                question: "¿Qué deben evaluar los policías en casos de violencia?",
+                options: [
+                    "Daño psicológico",
+                    "Publicidad",
+                    "Costos",
+                    "Medios"
+                ],
+                correctAnswer: "a",
+                feedback: "Evalúan daño psicológico."
+            },
+            {
+                id: 187,
+                question: "¿Qué prohíbe el Artículo 14?",
+                options: [
+                    "Leyes retroactivas",
+                    "Educación",
+                    "Expresión",
+                    "Protestas"
+                ],
+                correctAnswer: "a",
+                feedback: "Prohíbe leyes retroactivas."
+            },
+            {
+                id: 188,
+                question: "¿Qué asegura el Artículo 17?",
+                options: [
+                    "Justicia expedita",
+                    "Detención arbitraria",
+                    "Secreto",
+                    "Publicidad"
+                ],
+                correctAnswer: "a",
+                feedback: "Garantiza justicia expedita."
+            },
+            {
+                id: 189,
+                question: "¿Qué establece el Artículo 19 sobre prisión preventiva?",
+                options: [
+                    "Para cualquier delito",
+                    "Solo delitos graves",
+                    "Sin límite",
+                    "Por solicitud"
+                ],
+                correctAnswer: "b",
+                feedback: "Solo para delitos graves."
+            },
+            {
+                id: 190,
+                question: "¿Qué principio rige los juicios según el Artículo 20?",
+                options: [
+                    "Secreto",
+                    "Publicidad",
+                    "Exclusión",
+                    "Restricción"
+                ],
+                correctAnswer: "b",
+                feedback: "Los juicios son públicos."
+            },
+            {
+                id: 191,
+                question: "¿Qué derecho tiene la víctima según el Artículo 20?",
+                options: [
+                    "Detener al agresor",
+                    "Reparación del daño",
+                    "Evitar juicios",
+                    "Guardar silencio"
+                ],
+                correctAnswer: "b",
+                feedback: "Derecho a reparación del daño."
+            },
+            {
+                id: 192,
+                question: "¿Qué establece el Artículo 29 sobre garantías?",
+                options: [
+                    "Suspensión libre",
+                    "Solo en emergencias",
+                    "No permitida",
+                    "Aprobación ciudadana"
+                ],
+                correctAnswer: "b",
+                feedback: "Solo en emergencias."
+            },
+            {
+                id: 193,
+                question: "¿Qué promueve el Artículo 6 de la Ley General?",
+                options: [
+                    "Disciplina civil",
+                    "Control militar",
+                    "Privatización",
+                    "Secreto"
+                ],
+                correctAnswer: "a",
+                feedback: "Promueve disciplina civil."
+            },
+            {
+                id: 194,
+                question: "¿Qué deben hacer los policías con las pruebas según el Artículo 10?",
+                options: [
+                    "Ignorarlas",
+                    "Preservarlas",
+                    "Modificarlas",
+                    "Publicarlas"
+                ],
+                correctAnswer: "b",
+                feedback: "Deben preservar las pruebas."
+            },
+            {
+                id: 195,
+                question: "¿Qué regula el Artículo 124?",
+                options: [
+                    "Equipo policial",
+                    "Salarios",
+                    "Protestas",
+                    "Educación"
+                ],
+                correctAnswer: "a",
+                feedback: "Regula equipo policial."
+            },
+            {
+                id: 196,
+                question: "¿Qué sucede si no se reportan armas decomisadas?",
+                options: [
+                    "Se confiscan",
+                    "Posesión ilegal",
+                    "Sin sanción",
+                    "Se destruyen"
+                ],
+                correctAnswer: "b",
+                feedback: "Es posesión ilegal."
+            },
+            {
+                id: 197,
+                question: "¿Qué principio guía el uso de la fuerza?",
+                options: [
+                    "Proporcionalidad",
+                    "Agresión",
+                    "Publicidad",
+                    "Exclusión"
+                ],
+                correctAnswer: "a",
+                feedback: "La fuerza debe ser proporcional."
+            },
+            {
+                id: 198,
+                question: "¿Qué nivel de fuerza es la persuasión verbal?",
+                options: [
+                    "Primero",
+                    "Segundo",
+                    "Tercero",
+                    "Cuarto"
+                ],
+                correctAnswer: "b",
+                feedback: "Es el segundo nivel."
+            },
+            {
+                id: 199,
+                question: "¿Qué está prohibido en manifestaciones pacíficas?",
+                options: [
+                    "Presencia policial",
+                    "Uso de armas",
+                    "Diálogo",
+                    "Tráfico"
+                ],
+                correctAnswer: "b",
+                feedback: "Prohíbe uso de armas."
+            },
+            {
+                id: 200,
+                question: "¿Qué debe incluir un informe sobre uso de la fuerza?",
+                options: [
+                    "Solo nombres",
+                    "Detalles del incidente",
+                    "Costos",
+                    "Opiniones"
+                ],
+                correctAnswer: "b",
+                feedback: "Incluye detalles del incidente."
+            }
+        ];
+
+        let currentQuestion = null;
+        let answeredCount = 0;
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let availableQuestions = [...questions];
+        let isFullExam = false;
+
+        const startScreen = document.getElementById('start-screen');
+        const examContent = document.getElementById('exam-content');
+        const singlePartButton = document.getElementById('single-part');
+        const fullExamButton = document.getElementById('full-exam');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options');
+        const feedbackDiv = document.getElementById('feedback');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+        const endScreen = document.getElementById('end-screen');
+        const answeredSpan = document.getElementById('answered');
+        const correctSpan = document.getElementById('correct');
+        const incorrectSpan = document.getElementById('incorrect');
+        const percentageSpan = document.getElementById('percentage');
+        const progressBar = document.getElementById('progress-bar');
+        const questionContainer = document.getElementById('question-container');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function updateStats() {
+            answeredSpan.textContent = answeredCount;
+            correctSpan.textContent = correctCount;
+            incorrectSpan.textContent = incorrectCount;
+            percentageSpan.textContent = ((answeredCount / questions.length) * 100).toFixed(1) + '%';
+            progressBar.value = answeredCount;
+        }
+
+        function loadQuestion() {
+            if (availableQuestions.length === 0) {
+                questionText.textContent = '¡Examen completado!';
+                optionsContainer.innerHTML = '';
+                feedbackDiv.classList.add('hidden');
+                nextButton.classList.add('hidden');
+                restartButton.classList.remove('hidden');
+                endScreen.classList.remove('hidden');
+                return;
+            }
+
+            questionContainer.style.opacity = '0';
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+                currentQuestion = availableQuestions.splice(randomIndex, 1)[0];
+                questionText.textContent = currentQuestion.question;
+                optionsContainer.innerHTML = '';
+                feedbackDiv.classList.add('hidden');
+                feedbackDiv.textContent = '';
+
+                // Crear array de respuestas (sin incisos)
+                const answers = [...currentQuestion.options];
+                // Aleatorizar respuestas
+                const shuffledAnswers = shuffleArray([...answers]);
+                // Mapear respuestas a incisos fijos (a, b, c, d)
+                const fixedOptions = [
+                    `a) ${shuffledAnswers[0]}`,
+                    `b) ${shuffledAnswers[1]}`,
+                    `c) ${shuffledAnswers[2]}`,
+                    `d) ${shuffledAnswers[3]}`
+                ];
+
+                // Encontrar el índice de la respuesta correcta en el array original
+                const originalCorrectIndex = ['a', 'b', 'c', 'd'].indexOf(currentQuestion.correctAnswer);
+                const correctAnswerText = currentQuestion.options[originalCorrectIndex];
+                // Encontrar el inciso asignado a la respuesta correcta en el orden aleatorio
+                const shuffledCorrectIndex = shuffledAnswers.indexOf(correctAnswerText);
+                currentQuestion.shuffledCorrectAnswer = ['a', 'b', 'c', 'd'][shuffledCorrectIndex];
+
+                // Mostrar opciones con incisos fijos
+                fixedOptions.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'bg-gray-100 text-gray-800 px-4 py-3 rounded-lg hover:bg-gray-200 w-full text-left transition-colors';
+                    button.textContent = option;
+                    button.onclick = () => checkAnswer(['a', 'b', 'c', 'd'][index], shuffledAnswers[index]);
+                    optionsContainer.appendChild(button);
+                });
+
+                nextButton.disabled = true;
+                questionContainer.style.opacity = '1';
+            }, 300);
+        }
+
+        function checkAnswer(selectedInciso, selectedAnswer) {
+            const originalCorrectIndex = ['a', 'b', 'c', 'd'].indexOf(currentQuestion.correctAnswer);
+            const correctAnswerText = currentQuestion.options[originalCorrectIndex];
+            const isCorrect = selectedAnswer === correctAnswerText;
+            answeredCount++;
+            if (isCorrect) {
+                correctCount++;
+                feedbackDiv.className = 'bg-green-100 p-4 rounded-lg mb-6 text-green-800';
+            } else {
+                incorrectCount++;
+                feedbackDiv.className = 'bg-red-100 p-4 rounded-lg mb-6 text-red-800';
+            }
+
+            feedbackDiv.textContent = `La respuesta correcta es "${correctAnswerText}" según el inciso "${currentQuestion.shuffledCorrectAnswer}". ${currentQuestion.feedback}`;
+            feedbackDiv.classList.remove('hidden');
+            nextButton.disabled = false;
+
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                const buttonInciso = button.textContent.charAt(0);
+                if (buttonInciso === currentQuestion.shuffledCorrectAnswer) {
+                    button.classList.add('bg-green-300', 'text-green-800');
+                } else if (buttonInciso === selectedInciso && !isCorrect) {
+                    button.classList.add('bg-red-300', 'text-red-800');
+                }
+            });
+
+            updateStats();
+        }
+
+        singlePartButton.onclick = () => {
+            isFullExam = false;
+            startScreen.classList.add('hidden');
+            examContent.classList.remove('hidden');
+            loadQuestion();
+        };
+
+        fullExamButton.onclick = () => {
+            isFullExam = true;
+            startScreen.classList.add('hidden');
+            examContent.classList.remove('hidden');
+            loadQuestion();
+        };
+
+        nextButton.onclick = loadQuestion;
+
+        restartButton.onclick = () => {
+            answeredCount = 0;
+            correctCount = 0;
+            incorrectCount = 0;
+            availableQuestions = [...questions];
+            updateStats();
+            restartButton.classList.add('hidden');
+            nextButton.classList.remove('hidden');
+            endScreen.classList.add('hidden');
+            nextButton.disabled = true;
+            loadQuestion();
+        };
+    </script>
+</body>
+</html>
