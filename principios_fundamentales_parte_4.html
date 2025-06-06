@@ -1,0 +1,532 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación: Principios Fundamentales y Derechos Humanos - Parte 4</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-blue-50 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl">
+        <h1 class="text-2xl font-bold mb-6 text-center text-blue-800">Evaluación: Principios Fundamentales y Derechos Humanos - Parte 4</h1>
+        <div id="error-message" class="hidden bg-red-100 text-red-800 p-4 rounded-lg mb-4"></div>
+        <div id="question-container" class="mb-6">
+            <h2 id="question-text" class="text-lg font-semibold text-gray-800 mb-4"></h2>
+            <div id="options-container" class="space-y-2"></div>
+        </div>
+        <div id="feedback-container" class="hidden bg-blue-100 text-blue-800 p-4 rounded-lg mb-4"></div>
+        <button id="next-button" class="hidden bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 w-full font-semibold transition-transform hover:scale-105">Siguiente Pregunta</button>
+        <a href="index.html" class="block text-center text-blue-600 hover:underline mt-4">Volver al Menú Principal</a>
+    </div>
+
+    <script>
+        // Verificar sesión al cargar
+        window.onload = () => {
+            const session = JSON.parse(localStorage.getItem('session') || '{}');
+            if (!session.loggedIn || !session.email) {
+                document.getElementById('error-message').textContent = 'Por favor, inicia sesión para acceder a la evaluación.';
+                document.getElementById('error-message').classList.remove('hidden');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+            loadQuestion();
+        };
+
+        const questions = [
+            {
+                question: "¿Qué debe garantizar el personal policial en la atención a víctimas de delitos cibernéticos?",
+                options: [
+                    "Minimizar la denuncia",
+                    "Protección y orientación especializada",
+                    "Interrogatorios extensos",
+                    "Evitar registrar el caso"
+                ],
+                correctAnswer: "Protección y orientación especializada",
+                feedback: {
+                    "Minimizar la denuncia": "Incorrecto. La denuncia debe tomarse en serio.",
+                    "Interrogatorios extensos": "Incorrecto. Se debe evitar revictimización.",
+                    "Evitar registrar el caso": "Incorrecto. El registro es obligatorio."
+                }
+            },
+            {
+                question: "¿Qué derecho se protege al garantizar la seguridad jurídica en un procedimiento policial?",
+                options: [
+                    "Derecho al debido proceso",
+                    "Derecho a la salud",
+                    "Derecho al trabajo",
+                    "Derecho a la educación"
+                ],
+                correctAnswer: "Derecho al debido proceso",
+                feedback: {
+                    "Derecho a la salud": "Incorrecto. La salud no está relacionada.",
+                    "Derecho al trabajo": "Incorrecto. El trabajo no aplica en este contexto.",
+                    "Derecho a la educación": "Incorrecto. La educación no es relevante."
+                }
+            },
+            {
+                question: "¿Qué debe hacer el personal policial al atender a una persona en situación de abandono?",
+                options: [
+                    "Ignorar la situación",
+                    "Proteger y notificar a las autoridades competentes",
+                    "Detener a la persona",
+                    "Limitar la intervención"
+                ],
+                correctAnswer: "Proteger y notificar a las autoridades competentes",
+                feedback: {
+                    "Ignorar la situación": "Incorrecto. Se debe actuar para proteger.",
+                    "Detener a la persona": "Incorrecto. La persona debe ser protegida.",
+                    "Limitar la intervención": "Incorrecto. La intervención es obligatoria."
+                }
+            },
+            {
+                question: "¿Qué principio policial implica actuar con responsabilidad en el ejercicio del cargo?",
+                options: [
+                    "Responsabilidad",
+                    "Subjetividad",
+                    "Arbitrariedad",
+                    "Discrecionalidad"
+                ],
+                correctAnswer: "Responsabilidad",
+                feedback: {
+                    "Subjetividad": "Incorrecto. La actuación debe ser objetiva.",
+                    "Arbitrariedad": "Incorrecto. Se prohíbe actuar sin fundamentos.",
+                    "Discrecionalidad": "Incorrecto. La responsabilidad es específica al cargo."
+                }
+            },
+            {
+                question: "¿Qué debe garantizar el personal policial en la atención a víctimas de violencia escolar?",
+                options: [
+                    "Minimizar la denuncia",
+                    "Protección y atención respetuosa",
+                    "Interrogatorios extensos",
+                    "Evitar registrar el caso"
+                ],
+                correctAnswer: "Protección y atención respetuosa",
+                feedback: {
+                    "Minimizar la denuncia": "Incorrecto. La denuncia debe tomarse en serio.",
+                    "Interrogatorios extensos": "Incorrecto. Se debe evitar revictimización.",
+                    "Evitar registrar el caso": "Incorrecto. El registro es obligatorio."
+                }
+            },
+            {
+                question: "¿Qué derecho se protege al garantizar la libertad de asociación en una intervención policial?",
+                options: [
+                    "Derecho a la libre asociación",
+                    "Derecho a la salud",
+                    "Derecho al trabajo",
+                    "Derecho a la educación"
+                ],
+                correctAnswer: "Derecho a la libre asociación",
+                feedback: {
+                    "Derecho a la salud": "Incorrecto. La salud no está relacionada.",
+                    "Derecho al trabajo": "Incorrecto. El trabajo no aplica en este contexto.",
+                    "Derecho a la educación": "Incorrecto. La educación no es relevante."
+                }
+            },
+            {
+                question: "¿Qué debe hacer el personal policial al atender a una persona en situación de mendicidad?",
+                options: [
+                    "Ignorar la situación",
+                    "Proteger y notificar a las autoridades competentes",
+                    "Detener a la persona",
+                    "Limitar la intervención"
+                ],
+                correctAnswer: "Proteger y notificar a las autoridades competentes",
+                feedback: {
+                    "Ignorar la situación": "Incorrecto. Se debe actuar para proteger.",
+                    "Detener a la persona": "Incorrecto. La persona debe ser protegida.",
+                    "Limitar la intervención": "Incorrecto. La intervención es obligatoria."
+                }
+            },
+            {
+                question: "¿Qué principio policial implica actuar con compromiso hacia la justicia?",
+                options: [
+                    "Justicia",
+                    "Subjetividad",
+                    "Arbitrariedad",
+                    "Discrecionalidad"
+                ],
+                correctAnswer: "Justicia",
+                feedback: {
+                    "Subjetividad": "Incorrecto. La actuación debe ser objetiva.",
+                    "Arbitrariedad": "Incorrecto. Se prohíbe actuar sin fundamentos.",
+                    "Discrecionalidad": "Incorrecto. La justicia es específica al compromiso."
+                }
+            },
+            {
+                question: "¿Qué debe garantizar el personal policial en la atención a víctimas de delitos patrimoniales?",
+                options: [
+                    "Minimizar la denuncia",
+                    "Protección y atención respetuosa",
+                    "Interrogatorios extensos",
+                    "Evitar registrar el caso"
+                ],
+                correctAnswer: "Protección y atención respetuosa",
+                feedback: {
+                    "Minimizar la denuncia": "Incorrecto. La denuncia debe tomarse en serio.",
+                    "Interrogatorios extensos": "Incorrecto. Se debe evitar revictimización.",
+                    "Evitar registrar el caso": "Incorrecto. El registro es obligatorio."
+                }
+            },
+            {
+                question: "¿Qué derecho se protege al garantizar la protección de datos personales en un procedimiento policial?",
+                options: [
+                    "Derecho a la intimidad",
+                    "Derecho a la salud",
+                    "Derecho al trabajo",
+                    "Derecho a la educación"
+                ],
+                correctAnswer: "Derecho a la intimidad",
+                feedback: {
+                    "Derecho a la salud": "Incorrecto. La salud no está relacionada.",
+                    "Derecho al trabajo": "Incorrecto. El trabajo no aplica en este contexto.",
+                    "Derecho a la educación": "Incorrecto. La educación no es relevante."
+                }
+            },
+            {
+                question: "¿Qué debe hacer el personal policial al atender a una persona en situación de violencia política?",
+                options: [
+                    "Ignorar la situación",
+                    "Proteger y notificar a las autoridades competentes",
+                    "Detener a la persona",
+                    "Limitar la intervención"
+                ],
+                correctAnswer: "Proteger y notificar a las autoridades competentes",
+                feedback: {
+                    "Ignorar la situación": "Incorrecto. Se debe actuar para proteger.",
+                    "Detener a la persona": "Incorrecto. La persona debe ser protegida.",
+                    "Limitar la intervención": "Incorrecto. La intervención es obligatoria."
+                }
+            },
+            {
+                question: "¿Qué principio policial implica actuar con respeto a la legalidad?",
+                options: [
+                    "Legalidad",
+                    "Subjetividad",
+                    "Arbitrariedad",
+                    "Discrecionalidad"
+                ],
+                correctAnswer: "Legalidad",
+                feedback: {
+                    "Subjetividad": "Incorrecto. La actuación debe ser objetiva.",
+                    "Arbitrariedad": "Incorrecto. Se prohíbe actuar sin fundamentos.",
+                    "Discrecionalidad": "Incorrecto. La legalidad es específica a la ley."
+                }
+            },
+            {
+                question: "¿Qué debe garantizar el personal policial en la atención a víctimas de delitos ambientales?",
+                options: [
+                    "Minimizar la denuncia",
+                    "Protección y atención respetuosa",
+                    "Interrogatorios extensos",
+                    "Evitar registrar el caso"
+                ],
+                correctAnswer: "Protección y atención respetuosa",
+                feedback: {
+                    "Minimizar la denuncia": "Incorrecto. La denuncia debe tomarse en serio.",
+                    "Interrogatorios extensos": "Incorrecto. Se debe evitar revictimización.",
+                    "Evitar registrar el caso": "Incorrecto. El registro es obligatorio."
+                }
+            },
+            {
+                question: "¿Qué derecho se protege al garantizar la libertad de movimiento en una intervención policial?",
+                options: [
+                    "Derecho a la libre circulación",
+                    "Derecho a la salud",
+                    "Derecho al trabajo",
+                    "Derecho a la educación"
+                ],
+                correctAnswer: "Derecho a la libre circulación",
+                feedback: {
+                    "Derecho a la salud": "Incorrecto. La salud no está relacionada.",
+                    "Derecho al trabajo": "Incorrecto. El trabajo no aplica en este contexto.",
+                    "Derecho a la educación": "Incorrecto. La educación no es relevante."
+                }
+            },
+            {
+                question: "¿Qué debe hacer el personal policial al atender a una persona en situación de discriminación racial?",
+                options: [
+                    "Ignorar la situación",
+                    "Proteger y notificar a las autoridades competentes",
+                    "Detener a la persona",
+                    "Limitar la intervención"
+                ],
+                correctAnswer: "Proteger y notificar a las autoridades competentes",
+                feedback: {
+                    "Ignorar la situación": "Incorrecto. Se debe actuar para proteger.",
+                    "Detener a la persona": "Incorrecto. La persona debe ser protegida.",
+                    "Limitar la intervención": "Incorrecto. La intervención es obligatoria."
+                }
+            },
+            {
+                question: "¿Qué principio policial implica actuar con compromiso hacia la comunidad?",
+                options: [
+                    "Proximidad",
+                    "Subjetividad",
+                    "Arbitrariedad",
+                    "Discrecionalidad"
+                ],
+                correctAnswer: "Proximidad",
+                feedback: {
+                    "Subjetividad": "Incorrecto. La actuación debe ser objetiva.",
+                    "Arbitrariedad": "Incorrecto. Se prohíbe actuar sin fundamentos.",
+                    "Discrecionalidad": "Incorrecto. La proximidad es específica a la comunidad."
+                }
+            },
+            {
+                question: "¿Qué debe garantizar el personal policial en la atención a víctimas de delitos electorales?",
+                options: [
+                    "Minimizar la denuncia",
+                    "Protección y atención respetuosa",
+                    "Interrogatorios extensos",
+                    "Evitar registrar el caso"
+                ],
+                correctAnswer: "Protección y atención respetuosa",
+                feedback: {
+                    "Minimizar la denuncia": "Incorrecto. La denuncia debe tomarse en serio.",
+                    "Interrogatorios extensos": "Incorrecto. Se debe evitar revictimización.",
+                    "Evitar registrar el caso": "Incorrecto. El registro es obligatorio."
+                }
+            },
+            {
+                question: "¿Qué derecho se protege al garantizar la igualdad de género en un procedimiento policial?",
+                options: [
+                    "Derecho a la igualdad",
+                    "Derecho a la salud",
+                    "Derecho al trabajo",
+                    "Derecho a la educación"
+                ],
+                correctAnswer: "Derecho a la igualdad",
+                feedback: {
+                    "Derecho a la salud": "Incorrecto. La salud no está relacionada.",
+                    "Derecho al trabajo": "Incorrecto. El trabajo no aplica en este contexto.",
+                    "Derecho a la educación": "Incorrecto. La educación no es relevante."
+                }
+            },
+            {
+                question: "¿Qué debe hacer el personal policial al atender a una persona en situación de violencia de género?",
+                options: [
+                    "Ignorar la situación",
+                    "Proteger y notificar a las autoridades competentes",
+                    "Detener a la persona",
+                    "Limitar la intervención"
+                ],
+                correctAnswer: "Proteger y notificar a las autoridades competentes",
+                feedback: {
+                    "Ignorar la situación": "Incorrecto. Se debe actuar para proteger.",
+                    "Detener a la persona": "Incorrecto. La persona debe ser protegida.",
+                    "Limitar la intervención": "Incorrecto. La intervención es obligatoria."
+                }
+            },
+            {
+                question: "¿Qué principio policial implica actuar con respeto a la diversidad sexual?",
+                options: [
+                    "Inclusión",
+                    "Subjetividad",
+                    "Arbitrariedad",
+                    "Discrecionalidad"
+                ],
+                correctAnswer: "Inclusión",
+                feedback: {
+                    "Subjetividad": "Incorrecto. La actuación debe ser objetiva.",
+                    "Arbitrariedad": "Incorrecto. Se prohíbe actuar sin fundamentos.",
+                    "Discrecionalidad": "Incorrecto. La inclusión es específica a la diversidad."
+                }
+            },
+            {
+                question: "¿Qué debe garantizar el personal policial en la atención a víctimas de delitos de odio?",
+                options: [
+                    "Minimizar la denuncia",
+                    "Protección y atención respetuosa",
+                    "Interrogatorios extensos",
+                    "Evitar registrar el caso"
+                ],
+                correctAnswer: "Protección y atención respetuosa",
+                feedback: {
+                    "Minimizar la denuncia": "Incorrecto. La denuncia debe tomarse en serio.",
+                    "Interrogatorios extensos": "Incorrecto. Se debe evitar revictimización.",
+                    "Evitar registrar el caso": "Incorrecto. El registro es obligatorio."
+                }
+            },
+            {
+                question: "¿Qué derecho se protege al garantizar la no discriminación por orientación sexual en un procedimiento policial?",
+                options: [
+                    "Derecho a la igualdad",
+                    "Derecho a la salud",
+                    "Derecho al trabajo",
+                    "Derecho a la educación"
+                ],
+                correctAnswer: "Derecho a la igualdad",
+                feedback: {
+                    "Derecho a la salud": "Incorrecto. La salud no está relacionada.",
+                    "Derecho al trabajo": "Incorrecto. El trabajo no aplica en este contexto.",
+                    "Derecho a la educación": "Incorrecto. La educación no es relevante."
+                }
+            },
+            {
+                question: "¿Qué debe hacer el personal policial al atender a una persona en situación de discriminación religiosa?",
+                options: [
+                    "Ignorar la situación",
+                    "Proteger y notificar a las autoridades competentes",
+                    "Detener a la persona",
+                    "Limitar la intervención"
+                ],
+                correctAnswer: "Proteger y notificar a las autoridades competentes",
+                feedback: {
+                    "Ignorar la situación": "Incorrecto. Se debe actuar para proteger.",
+                    "Detener a la persona": "Incorrecto. La persona debe ser protegida.",
+                    "Limitar la intervención": "Incorrecto. La intervención es obligatoria."
+                }
+            },
+            {
+                question: "¿Qué principio policial implica actuar con compromiso hacia la paz social?",
+                options: [
+                    "Pacificación",
+                    "Subjetividad",
+                    "Arbitrariedad",
+                    "Discrecionalidad"
+                ],
+                correctAnswer: "Pacificación",
+                feedback: {
+                    "Subjetividad": "Incorrecto. La actuación debe ser objetiva.",
+                    "Arbitrariedad": "Incorrecto. Se prohíbe actuar sin fundamentos.",
+                    "Discrecionalidad": "Incorrecto. La pacificación es específica a la paz."
+                }
+            },
+            {
+                question: "¿Qué debe garantizar el personal policial en la atención a víctimas de delitos contra la libertad?",
+                options: [
+                    "Minimizar la denuncia",
+                    "Protección y atención respetuosa",
+                    "Interrogatorios extensos",
+                    "Evitar registrar el caso"
+                ],
+                correctAnswer: "Protección y atención respetuosa",
+                feedback: {
+                    "Minimizar la denuncia": "Incorrecto. La denuncia debe tomarse en serio.",
+                    "Interrogatorios extensos": "Incorrecto. Se debe evitar revictimización.",
+                    "Evitar registrar el caso": "Incorrecto. El registro es obligatorio."
+                }
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function loadQuestion() {
+            const questionContainer = document.getElementById('question-container');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const nextButton = document.getElementById('next-button');
+
+            if (currentQuestionIndex >= questions.length) {
+                questionContainer.innerHTML = '<p class="text-center text-gray-800">¡Has completado la evaluación!</p>';
+                nextButton.classList.add('hidden');
+                return;
+            }
+
+            const question = questions[currentQuestionIndex];
+            questionText.textContent = `Pregunta ${currentQuestionIndex + 1}: ${question.question}`;
+            optionsContainer.innerHTML = '';
+            feedbackContainer.classList.add('hidden');
+            nextButton.classList.add('hidden');
+
+            const shuffledOptions = shuffle([...question.options]);
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 w-full text-left';
+                button.textContent = option;
+                button.onclick = () => handleAnswer(option, question);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswer(selectedOption, question) {
+            const feedbackContainer = document.getElementById('feedback-container');
+            const nextButton = document.getElementById('next-button');
+            const optionsContainer = document.getElementById('options-container');
+
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true;
+                button.className = 'bg-gray-200 text-gray-800 px-4 py-2 rounded-lg w-full text-left cursor-not-allowed';
+            });
+
+            feedbackContainer.classList.remove('hidden');
+            if (selectedOption === question.correctAnswer) {
+                feedbackContainer.className = 'bg-green-100 text-green-800 p-4 rounded-lg mb-4';
+                feedbackContainer.innerHTML = `
+                    <p><strong>¡Correcto!</strong> ${selectedOption} es la respuesta correcta.</p>
+                `;
+            } else {
+                feedbackContainer.className = 'bg-red-100 text-red-800 p-4 rounded-lg mb-4';
+                feedbackContainer.innerHTML = `
+                    <p><strong>Incorrecto.</strong> Seleccionaste: ${selectedOption}.</p>
+                    <p>${question.feedback[selectedOption]}</p>
+                    <p><strong>Respuesta correcta:</strong> ${question.correctAnswer}</p>
+                `;
+            }
+
+            nextButton.classList.remove('hidden');
+            nextButton.onclick = () => {
+                currentQuestionIndex++;
+                loadQuestion();
+            };
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación: Principios Fundamentales y Derechos Humanos - Parte 1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-blue-50 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl">
+        <h1 class="text-2xl font-bold mb-6 text-center text-blue-800">Evaluación: Principios Fundamentales y Derechos Humanos - Parte 1</h1>
+        <div id="error-message" class="hidden bg-red-100 text-red-800 p-4 rounded-lg mb-4"></div>
+        <div id="question-container" class="mb-6">
+            <h2 id="question-text" class="text-lg font-semibold text-gray-800 mb-4"></h2>
+            <div id="options-container" class="space-y-2"></div>
+        </div>
+        <div id="feedback-container" class="hidden bg-blue-100 text-blue-800 p-4 rounded-lg mb-4"></div>
+        <button id="next-button" class="hidden bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 w-full font-semibold transition-transform hover:scale-105">Siguiente Pregunta</button>
+        <a href="index.html" class="block text-center text-blue-600 hover:underline mt-4">Volver al Menú Principal</a>
+    </div>
+
+    <script>
+        // Verificar sesión al cargar
+        window.onload = () => {
+            const session = JSON.parse(localStorage.getItem('session') || '{}');
+            if (!session.loggedIn || !session.email) {
+                document.getElementById('error-message').textContent = 'Por favor, inicia sesión para acceder a la evaluación.';
+                document.getElementById('error-message').classList.remove('hidden');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+            loadQuestion();
+        };
+
+        const questions = [
+            {
+                question: "Según la Constitución Política de los Estados Unidos Mexicanos, ¿quiénes gozan de los derechos humanos reconocidos en la Constitución y los tratados internacionales?",
+                options: [
+                    "Solo los ciudadanos mexicanos",
+                    "Solo las personas mayores de edad",
+                    "Todas las personas en los Estados Unidos Mexicanos",
+                    "Solo los servidores públicos"
+                ],
+                correctAnswer: "Todas las personas en los Estados Unidos Mexicanos",
+                feedback: {
+                    "Solo los ciudadanos mexicanos": "Incorrecto. El artículo 1° de la CPEUM establece que todas las personas gozarán de los derechos humanos, no solo ciudadanos.",
+                    "Solo las personas mayores de edad": "Incorrecto. Los derechos humanos aplican sin distinción de edad.",
+                    "Solo los servidores públicos": "Incorrecto. Los derechos humanos no se limitan a servidores públicos."
+                }
+            },
+            {
+                question: "¿Cuál de los siguientes NO es un principio rector de los derechos humanos según la Constitución Política de la Ciudad de México?",
+                options: [
+                    "Universalidad",
+                    "Interdependencia",
+                    "Jerarquía",
+                    "Progresividad"
+                ],
+                correctAnswer: "Jerarquía",
+                feedback: {
+                    "Universalidad": "Incorrecto. La universalidad es un principio rector de los derechos humanos.",
+                    "Interdependencia": "Incorrecto. La interdependencia es un principio rector.",
+                    "Progresividad": "Incorrecto. La progresividad es un principio rector."
+                }
+            },
+            {
+                question: "Según el Protocolo General de Actuación Policial de la SSC CDMX, ¿qué implica el principio de no discriminación en la actuación del personal policial?",
+                options: [
+                    "Tratar a todos los ciudadanos de la misma manera",
+                    "Evitar cualquier acto que atente contra la dignidad humana basado en diversas causas",
+                    "Limitar los derechos de las personas que incurran en faltas administrativas",
+                    "Aplicar sanciones diferenciadas según el origen étnico"
+                ],
+                correctAnswer: "Evitar cualquier acto que atente contra la dignidad humana basado en diversas causas",
+                feedback: {
+                    "Tratar a todos los ciudadanos de la misma manera": "Incorrecto. La no discriminación se enfoca en evitar limitaciones por causas específicas.",
+                    "Limitar los derechos de las personas que incurran en faltas administrativas": "Incorrecto. Los derechos solo se limitan para proteger el orden público, sin estereotipos.",
+                    "Aplicar sanciones diferenciadas según el origen étnico": "Incorrecto. La no discriminación prohíbe distinciones por origen étnico."
+                }
+            },
+            {
+                question: "¿Cómo debe ser la formación del personal policial según el Protocolo Nacional en casos de Violencia contra las Mujeres?",
+                options: [
+                    "Enfocada principalmente en técnicas de defensa personal",
+                    "Basada en la perspectiva de género, interseccionalidad y derechos humanos",
+                    "Orientada únicamente a la aplicación estricta de la ley",
+                    "Centrada en la investigación de delitos de alto impacto"
+                ],
+                correctAnswer: "Basada en la perspectiva de género, interseccionalidad y derechos humanos",
+                feedback: {
+                    "Enfocada principalmente en técnicas de defensa personal": "Incorrecto. La formación debe incluir perspectiva de género, no solo defensa.",
+                    "Orientada únicamente a la aplicación estricta de la ley": "Incorrecto. Debe ser integral, no solo legal.",
+                    "Centrada en la investigación de delitos de alto impacto": "Incorrecto. No se limita a delitos específicos."
+                }
+            },
+            {
+                question: "¿Qué se entiende por 'grupos en situación de vulnerabilidad' según las fuentes?",
+                options: [
+                    "Personas con ingresos económicos bajos",
+                    "Aquellos en mayor riesgo de que sus derechos sean violentados por diversas características",
+                    "Individuos que han cometido faltas administrativas leves",
+                    "Ciudadanos que no participan en redes vecinales"
+                ],
+                correctAnswer: "Aquellos en mayor riesgo de que sus derechos sean violentados por diversas características",
+                feedback: {
+                    "Personas con ingresos económicos bajos": "Incorrecto. La condición económica es solo un factor.",
+                    "Individuos que han cometido faltas administrativas leves": "Incorrecto. No se relaciona con faltas administrativas.",
+                    "Ciudadanos que no participan en redes vecinales": "Incorrecto. La participación vecinal no define vulnerabilidad."
+                }
+            },
+            {
+                question: "En la interacción con personas hablantes de lenguas indígenas, ¿cuál es el primer paso si no comprenden el español?",
+                options: [
+                    "Terminar la interacción por falta de comunicación",
+                    "Hablar más lento en español con señas",
+                    "Solicitar apoyo de expertos para identificar la lengua",
+                    "Comunicarse únicamente por escrito"
+                ],
+                correctAnswer: "Solicitar apoyo de expertos para identificar la lengua",
+                feedback: {
+                    "Terminar la interacción por falta de comunicación": "Incorrecto. Se debe garantizar la comunicación en su lengua.",
+                    "Hablar más lento en español con señas": "Incorrecto. Hablar más lento no resuelve la barrera.",
+                    "Comunicarse únicamente por escrito": "Incorrecto. La comunicación oral es prioritaria."
+                }
+            },
+            {
+                question: "Al realizar una inspección a una persona, ¿quién debe llevarla a cabo?",
+                options: [
+                    "Cualquier integrante de la policía",
+                    "Un integrante de la policía del mismo sexo",
+                    "Un mando superior",
+                    "Personal pericial"
+                ],
+                correctAnswer: "Un integrante de la policía del mismo sexo",
+                feedback: {
+                    "Cualquier integrante de la policía": "Incorrecto. Debe ser del mismo sexo.",
+                    "Un mando superior": "Incorrecto. El criterio es el sexo, no el rango.",
+                    "Personal pericial": "Incorrecto. No corresponde a personal pericial."
+                }
+            },
+            {
+                question: "¿Qué se prohíbe al personal policial durante una entrevista a una víctima?",
+                options: [
+                    "Tomar notas de la conversación",
+                    "Cuestionamientos que manifiesten incredulidad o prejuzguen",
+                    "Preguntar sobre los hechos ocurridos",
+                    "Considerar la relación con los involucrados"
+                ],
+                correctAnswer: "Cuestionamientos que manifiesten incredulidad o prejuzguen",
+                feedback: {
+                    "Tomar notas de la conversación": "Incorrecto. Tomar notas es permitido.",
+                    "Preguntar sobre los hechos ocurridos": "Incorrecto. Preguntar hechos es necesario.",
+                    "Considerar la relación con los involucrados": "Incorrecto. La relación puede ser relevante."
+                }
+            },
+            {
+                question: "En la atención a víctimas, ¿cuál es la prioridad si presentan lesiones graves?",
+                options: [
+                    "Tomar su declaración de inmediato",
+                    "Brindar atención médica de urgencia",
+                    "Preservar la escena del delito",
+                    "Localizar al presunto agresor"
+                ],
+                correctAnswer: "Brindar atención médica de urgencia",
+                feedback: {
+                    "Tomar su declaración de inmediato": "Incorrecto. La vida es prioridad.",
+                    "Preservar la escena del delito": "Incorrecto. La preservación es secundaria.",
+                    "Localizar al presunto agresor": "Incorrecto. La víctima es prioridad."
+                }
+            },
+            {
+                question: "Al interactuar con personas de la diversidad sexual, ¿qué se considera en traslados?",
+                options: [
+                    "Transportarlas por separado",
+                    "Transportarlas con personas del género con el que se identifiquen",
+                    "Asignarles vehículo exclusivo",
+                    "Remover accesorios de su identidad"
+                ],
+                correctAnswer: "Transportarlas con personas del género con el que se identifiquen",
+                feedback: {
+                    "Transportarlas por separado": "Incorrecto. No se requiere separación.",
+                    "Asignarles vehículo exclusivo": "Incorrecto. No se necesita vehículo exclusivo.",
+                    "Remover accesorios de su identidad": "Incorrecto. No se remueven accesorios."
+                }
+            },
+            {
+                question: "¿Qué principio implica que los derechos humanos no pueden fragmentarse?",
+                options: [
+                    "Universalidad",
+                    "Indivisibilidad",
+                    "Progresividad",
+                    "Interseccionalidad"
+                ],
+                correctAnswer: "Indivisibilidad",
+                feedback: {
+                    "Universalidad": "Incorrecto. Universalidad implica derechos para todos.",
+                    "Progresividad": "Incorrecto. Progresividad es sobre mejora de derechos.",
+                    "Interseccionalidad": "Incorrecto. Interseccionalidad trata vulnerabilidades cruzadas."
+                }
+            },
+            {
+                question: "Según el Protocolo Nacional, ¿qué significa el enfoque diferencial e interseccional?",
+                options: [
+                    "Tratar a mujeres diferente a hombres",
+                    "Reconocer diversidad de mujeres y factores de desigualdad",
+                    "Enfocarse solo en perspectiva de género",
+                    "Aplicar mismos protocolos a todas"
+                ],
+                correctAnswer: "Reconocer diversidad de mujeres y factores de desigualdad",
+                feedback: {
+                    "Tratar a mujeres diferente a hombres": "Incorrecto. No es solo diferencia por sexo.",
+                    "Enfocarse solo en perspectiva de género": "Incorrecto. Incluye más que género.",
+                    "Aplicar mismos protocolos a todas": "Incorrecto. Requiere adaptaciones específicas."
+                }
+            },
+            {
+                question: "¿Qué principio policial implica no aceptar pagos ilegales?",
+                options: [
+                    "Eficiencia",
+                    "Profesionalismo",
+                    "Honradez",
+                    "Objetividad"
+                ],
+                correctAnswer: "Honradez",
+                feedback: {
+                    "Eficiencia": "Incorrecto. Eficiencia es sobre recursos.",
+                    "Profesionalismo": "Incorrecto. Profesionalismo es sobre capacitación.",
+                    "Objetividad": "Incorrecto. Objetividad es sobre hechos."
+                }
+            },
+            {
+                question: "¿Cuál es un principio de la educación según la CPEUM relacionado con la dignidad?",
+                options: [
+                    "Respeto irrestricto de la dignidad con enfoque de derechos humanos",
+                    "Basada en memorización de datos históricos",
+                    "Priorizar interés económico",
+                    "Ajena a valores morales"
+                ],
+                correctAnswer: "Respeto irrestricto de la dignidad con enfoque de derechos humanos",
+                feedback: {
+                    "Basada en memorización de datos históricos": "Incorrecto. No se limita a memorización.",
+                    "Priorizar interés económico": "Incorrecto. Prioriza desarrollo integral.",
+                    "Ajena a valores morales": "Incorrecto. Incluye valores y paz."
+                }
+            },
+            {
+                question: "Según la Ley General de Acceso de las Mujeres, ¿qué deben incluir los programas educativos?",
+                options: [
+                    "Competencia económica",
+                    "Respeto a derechos humanos de mujeres y modificar estereotipos",
+                    "Solo historia de México",
+                    "Habilidades técnicas laborales"
+                ],
+                correctAnswer: "Respeto a derechos humanos de mujeres y modificar estereotipos",
+                feedback: {
+                    "Competencia económica": "Incorrecto. No es el enfoque principal.",
+                    "Solo historia de México": "Incorrecto. Es más amplio que historia.",
+                    "Habilidades técnicas laborales": "Incorrecto. No es el foco principal."
+                }
+            },
+            {
+                question: "¿Qué garantiza la Constitución de la CDMX sobre educación indígena?",
+                options: [
+                    "Educación solo en español",
+                    "Educación solo en lengua originaria",
+                    "Educación bilingüe con perspectiva intercultural",
+                    "No es responsabilidad de la Ciudad"
+                ],
+                correctAnswer: "Educación bilingüe con perspectiva intercultural",
+                feedback: {
+                    "Educación solo en español": "Incorrecto. Debe ser bilingüe.",
+                    "Educación solo en lengua originaria": "Incorrecto. Debe ser bilingüe.",
+                    "No es responsabilidad de la Ciudad": "Incorrecto. Es responsabilidad de la Ciudad."
+                }
+            },
+            {
+                question: "¿Qué derecho se garantiza a personas con discapacidad en la CDMX?",
+                options: [
+                    "Exclusión de programas sociales",
+                    "Ajustes razonables, proporcionales y objetivos",
+                    "Atención solo en instituciones especializadas",
+                    "Atención según situación económica"
+                ],
+                correctAnswer: "Ajustes razonables, proporcionales y objetivos",
+                feedback: {
+                    "Exclusión de programas sociales": "Incorrecto. Se busca inclusión.",
+                    "Atención solo en instituciones especializadas": "Incorrecto. Se promueve inclusión general.",
+                    "Atención según situación económica": "Incorrecto. No depende de economía."
+                }
+            },
+            {
+                question: "¿Qué implica el principio de interés superior de la niñez?",
+                options: [
+                    "Priorizar opinión de adultos",
+                    "Evaluar repercusiones para proteger a menores",
+                    "Limitar participación de menores",
+                    "Enfocarse solo en educación"
+                ],
+                correctAnswer: "Evaluar repercusiones para proteger a menores",
+                feedback: {
+                    "Priorizar opinión de adultos": "Incorrecto. Prioriza interés de menores.",
+                    "Limitar participación de menores": "Incorrecto. Promueve participación.",
+                    "Enfocarse solo en educación": "Incorrecto. Abarca desarrollo integral."
+                }
+            },
+            {
+                question: "En atención a menores víctimas, ¿qué se prioriza sobre detención?",
+                options: [
+                    "Recolectar evidencia",
+                    "Proteger al menor",
+                    "Entrevistar testigos",
+                    "Formalizar denuncia"
+                ],
+                correctAnswer: "Proteger al menor",
+                feedback: {
+                    "Recolectar evidencia": "Incorrecto. Protección es prioritaria.",
+                    "Entrevistar testigos": "Incorrecto. Protección supera entrevistas.",
+                    "Formalizar denuncia": "Incorrecto. Protección es lo primero."
+                }
+            },
+            {
+                question: "¿Cuál es un principio del servicio de carrera ministerial y pericial?",
+                options: [
+                    "Subjetividad",
+                    "Dependencia",
+                    "Legalidad",
+                    "Arbitrariedad"
+                ],
+                correctAnswer: "Legalidad",
+                feedback: {
+                    "Subjetividad": "Incorrecto. Se requiere objetividad.",
+                    "Dependencia": "Incorrecto. Se busca profesionalismo.",
+                    "Arbitrariedad": "Incorrecto. Se prohíbe arbitrariedad."
+                }
+            },
+            {
+                question: "¿Qué no pueden invocar los entes públicos para restringir programas sociales?",
+                options: [
+                    "Capacitación del personal",
+                    "Metas de eficiencia",
+                    "Austeridad",
+                    "Reorganización administrativa"
+                ],
+                correctAnswer: "Austeridad",
+                feedback: {
+                    "Capacitación del personal": "Incorrecto. Capacitación no afecta programas.",
+                    "Metas de eficiencia": "Incorrecto. Eficiencia no justifica restricción.",
+                    "Reorganización administrativa": "Incorrecto. No es excusa válida."
+                }
+            },
+            {
+                question: "¿Qué principio se observa en el Consejo Ciudadano de Seguridad de la CDMX?",
+                options: [
+                    "Excluir sociedad civil",
+                    "Paridad de género y diversidad cultural",
+                    "Solo servidores públicos",
+                    "Solo expertos académicos"
+                ],
+                correctAnswer: "Paridad de género y diversidad cultural",
+                feedback: {
+                    "Excluir sociedad civil": "Incorrecto. Incluye sociedad civil.",
+                    "Solo servidores públicos": "Incorrecto. Incluye ciudadanos.",
+                    "Solo expertos académicos": "Incorrecto. Es más amplio que académicos."
+                }
+            },
+            {
+                question: "¿Qué sistema establece acceso a manifestaciones culturales según la CPEUM?",
+                options: [
+                    "Sistema educativo",
+                    "La ley",
+                    "Sistema de salud",
+                    "Sistema de seguridad pública"
+                ],
+                correctAnswer: "La ley",
+                feedback: {
+                    "Sistema educativo": "Incorrecto. Educación no es el mecanismo.",
+                    "Sistema de salud": "Incorrecto. Salud no es relevante aquí.",
+                    "Sistema de seguridad pública": "Incorrecto. Seguridad no aplica."
+                }
+            },
+            {
+                question: "¿Cuál es una obligación de las Instituciones de Seguridad Pública?",
+                options: [
+                    "Disponer de bienes asegurados",
+                    "Preservar secrecía de asuntos conocidos",
+                    "Ocultar información de investigación",
+                    "Limitar auxilio a personas en peligro"
+                ],
+                correctAnswer: "Preservar secrecía de asuntos conocidos",
+                feedback: {
+                    "Disponer de bienes asegurados": "Incorrecto. Prohibido disponer bienes.",
+                    "Ocultar información de investigación": "Incorrecto. Deben registrar información.",
+                    "Limitar auxilio a personas en peligro": "Incorrecto. Deben prestar auxilio."
+                }
+            },
+            {
+                question: "¿Qué hacer si una víctima entra en crisis emocional?",
+                options: [
+                    "Ignorar su estado emocional",
+                    "Calmarla minimizando la situación",
+                    "Registrar agresiones y asegurar lugar seguro",
+                    "Detener al agresor primero"
+                ],
+                correctAnswer: "Registrar agresiones y asegurar lugar seguro",
+                feedback: {
+                    "Ignorar su estado emocional": "Incorrecto. Debe atenderse con sensibilidad.",
+                    "Calmarla minimizando la situación": "Incorrecto. No minimizar la situación.",
+                    "Detener al agresor primero": "Incorrecto. Priorizar a la víctima."
+                }
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function loadQuestion() {
+            const questionContainer = document.getElementById('question-container');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const nextButton = document.getElementById('next-button');
+
+            if (currentQuestionIndex >= questions.length) {
+                questionContainer.innerHTML = '<p class="text-center text-gray-800">¡Has completado la evaluación!</p>';
+                nextButton.classList.add('hidden');
+                return;
+            }
+
+            const question = questions[currentQuestionIndex];
+            questionText.textContent = `Pregunta ${currentQuestionIndex + 1}: ${question.question}`;
+            optionsContainer.innerHTML = '';
+            feedbackContainer.classList.add('hidden');
+            nextButton.classList.add('hidden');
+
+            const shuffledOptions = shuffle([...question.options]);
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 w-full text-left';
+                button.textContent = option;
+                button.onclick = () => handleAnswer(option, question);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswer(selectedOption, question) {
+            const feedbackContainer = document.getElementById('feedback-container');
+            const nextButton = document.getElementById('next-button');
+            const optionsContainer = document.getElementById('options-container');
+
+            // Deshabilitar botones de opciones
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true;
+                button.className = 'bg-gray-200 text-gray-800 px-4 py-2 rounded-lg w-full text-left cursor-not-allowed';
+            });
+
+            feedbackContainer.classList.remove('hidden');
+            if (selectedOption === question.correctAnswer) {
+                feedbackContainer.className = 'bg-green-100 text-green-800 p-4 rounded-lg mb-4';
+                feedbackContainer.innerHTML = `
+                    <p><strong>¡Correcto!</strong> ${selectedOption} es la respuesta correcta.</p>
+                `;
+            } else {
+                feedbackContainer.className = 'bg-red-100 text-red-800 p-4 rounded-lg mb-4';
+                feedbackContainer.innerHTML = `
+                    <p><strong>Incorrecto.</strong> Seleccionaste: ${selectedOption}.</p>
+                    <p>${question.feedback[selectedOption]}</p>
+                    <p><strong>Respuesta correcta:</strong> ${question.correctAnswer}</p>
+                `;
+            }
+
+            nextButton.classList.remove('hidden');
+            nextButton.onclick = () => {
+                currentQuestionIndex++;
+                loadQuestion();
+            };
+        }
+    </script>
+</body>
+</html>
